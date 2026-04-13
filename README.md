@@ -1,5 +1,3 @@
----
-
 # KanaFlow
 
 KanaFlow is a minimalist, high-performance Japanese kana training tool designed to develop fluency through active recall and real-time feedback.
