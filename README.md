@@ -158,7 +158,7 @@ Contributions are encouraged, particularly in the following areas:
 
 ## License
 
-MIT License
+This project is licensed under the [MIT License](https://github.com/NajmosSalahin/KanaFlow/blob/main/LICENSE).
 
 ---
 
