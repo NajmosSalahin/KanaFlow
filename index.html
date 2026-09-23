@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Kanaflow — free hiragana, katakana, and JLPT word typing quiz with themes, fonts, and streak stats."
+    />
+    <meta name="theme-color" content="#0e0f11" />
+    <meta property="og:title" content="Kanaflow" />
+    <meta
+      property="og:description"
+      content="Practice Japanese kana and JLPT vocabulary with a fast typing quiz."
+    />
+    <meta property="og:type" content="website" />
+    <title>Kanaflow — Japanese typing quiz</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Figtree:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Klee+One:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1 class="site-title">kanaflow</h1>
+    <div id="tt" role="tooltip"></div>
+
+    <div class="main-layout">
+      <!-- QUIZ -->
+      <div class="quiz-card" role="region" aria-label="Quiz">
+        <div class="mode-row">
+          <div class="mode-switch" role="group" aria-label="Quiz mode">
+            <button
+              class="mbtn active"
+              id="modeLetters"
+              type="button"
+              onclick="setMode('letters')"
+              aria-pressed="true"
+            >
+              Letters
+            </button>
+            <button
+              class="mbtn"
+              id="modeWords"
+              type="button"
+              onclick="setMode('words')"
+              aria-pressed="false"
+            >
+              Words
+            </button>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-chip" aria-label="Score">
+            <span id="sv">0</span>/<span id="tv">0</span>
+          </div>
+          <div class="acc-wrap" aria-hidden="true">
+            <div class="acc-fill" id="af"></div>
+          </div>
+          <div class="streak" id="stk" title="Current streak">
+            <div class="s-dot"></div>
+            <span id="stv">0</span>
+          </div>
+          <div
+            class="stat-chip best-chip"
+            id="bestchip"
+            title="Best streak · best accuracy"
+          >
+            ★<span id="bstv">0</span> · <span id="bacv">—</span>
+          </div>
+        </div>
+
+        <div class="kana-area">
+          <div class="type-label">
+            <span id="tl">hiragana</span
+            ><span class="word-mean" id="wm" style="display: none"></span
+            ><span class="word-lvl" id="wlv" style="display: none"></span>
+          </div>
+          <div class="kana-char in" id="kc" lang="ja">あ</div>
+          <div class="reveal" id="rv" aria-hidden="true">—</div>
+          <div class="kana-btns">
+            <button
+              class="kbtn sound-btn"
+              id="sndbtn"
+              type="button"
+              onclick="playAudio()"
+            >
+              ▶ sound
+            </button>
+            <button class="kbtn" type="button" onclick="toggleReveal()">
+              peek
+            </button>
+          </div>
+        </div>
+
+        <div id="emptyNote" class="empty-note" style="display: none"></div>
+
+        <div class="input-area" id="inputArea">
+          <div class="input-wrap">
+            <input
+              id="inp"
+              type="text"
+              placeholder="type romaji…"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              aria-label="Type your answer"
+            />
+            <span class="ent-hint"><kbd>↵</kbd></span>
+          </div>
+          <div class="cf-row" id="cfr" aria-hidden="true"></div>
+        </div>
+
+        <div class="msg" id="msg" role="status" aria-live="polite">
+          Peek the reading — hover, tap, or press ?
+        </div>
+
+        <div class="act-row">
+          <button
+            class="btn btn-rev"
+            id="rbtn"
+            type="button"
+            onclick="toggleReveal()"
+          >
+            Reveal
+          </button>
+          <button
+            class="btn btn-skip"
+            id="skbtn"
+            type="button"
+            onclick="skip()"
+            style="display: none"
+          >
+            Skip →
+          </button>
+        </div>
+      </div>
+
+      <!-- OPTIONS -->
+      <div class="opt-panel" role="region" aria-label="Options">
+        <button
+          class="opt-toggle"
+          id="optog"
+          type="button"
+          onclick="toggleOpt()"
+          aria-expanded="false"
+        >
+          Options <span class="chev" aria-hidden="true">▾</span>
+        </button>
+        <div class="opt-body" id="optbody">
+          <div class="ts">
+            <div class="sec-ttl" id="theme-ttl">Theme</div>
+            <div
+              class="tgrid"
+              id="tgrid"
+              role="group"
+              aria-labelledby="theme-ttl"
+            ></div>
+          </div>
+
+          <div class="fs">
+            <div class="sec-ttl" id="font-ttl">Kana font</div>
+            <div class="frow" role="group" aria-labelledby="font-ttl">
+              <button
+                type="button"
+                class="fchip active"
+                data-font="'Noto Sans JP',sans-serif"
+                onclick="setFont(this)"
+                aria-pressed="true"
+              >
+                <span class="fjp" aria-hidden="true">あ</span>Sans
+              </button>
+              <button
+                type="button"
+                class="fchip"
+                data-font="'Noto Serif JP',serif"
+                onclick="setFont(this)"
+                aria-pressed="false"
+              >
+                <span
+                  class="fjp"
+                  style="font-family: &quot;Noto Serif JP&quot;, serif"
+                  aria-hidden="true"
+                  >あ</span
+                >Serif
+              </button>
+              <button
+                type="button"
+                class="fchip"
+                data-font="'M PLUS Rounded 1c',sans-serif"
+                onclick="setFont(this)"
+                aria-pressed="false"
+              >
+                <span
+                  class="fjp"
+                  style="font-family: &quot;M PLUS Rounded 1c&quot;, sans-serif"
+                  aria-hidden="true"
+                  >あ</span
+                >Round
+              </button>
+              <button
+                type="button"
+                class="fchip"
+                data-font="'Zen Kaku Gothic New',sans-serif"
+                onclick="setFont(this)"
+                aria-pressed="false"
+              >
+                <span
+                  class="fjp"
+                  style="
+                    font-family: &quot;Zen Kaku Gothic New&quot;, sans-serif;
+                  "
+                  aria-hidden="true"
+                  >あ</span
+                >Zen
+              </button>
+              <button
+                type="button"
+                class="fchip"
+                data-font="'Klee One',sans-serif"
+                onclick="setFont(this)"
+                aria-pressed="false"
+              >
+                <span
+                  class="fjp"
+                  style="font-family: &quot;Klee One&quot;, sans-serif"
+                  aria-hidden="true"
+                  >あ</span
+                >Klee
+              </button>
+            </div>
+          </div>
+
+          <div class="wl hidden" id="jlptSection">
+            <div class="sec-ttl" id="jlpt-ttl">JLPT level</div>
+            <div
+              class="wlrow"
+              id="jlptRow"
+              role="group"
+              aria-labelledby="jlpt-ttl"
+            >
+              <button
+                type="button"
+                class="wlchip active"
+                data-lvl="all"
+                aria-pressed="true"
+              >
+                all
+              </button>
+              <button
+                type="button"
+                class="wlchip"
+                data-lvl="N5"
+                aria-pressed="false"
+              >
+                N5
+              </button>
+              <button
+                type="button"
+                class="wlchip"
+                data-lvl="N4"
+                aria-pressed="false"
+              >
+                N4
+              </button>
+              <button
+                type="button"
+                class="wlchip"
+                data-lvl="N3"
+                aria-pressed="false"
+              >
+                N3
+              </button>
+              <button
+                type="button"
+                class="wlchip"
+                data-lvl="N2"
+                aria-pressed="false"
+              >
+                N2
+              </button>
+              <button
+                type="button"
+                class="wlchip"
+                data-lvl="N1"
+                aria-pressed="false"
+              >
+                N1
+              </button>
+            </div>
+          </div>
+
+          <div class="ksec">
+            <div class="sec-hd">
+              <span class="sec-ttl" id="hg-ttl">Hiragana</span>
+              <div class="clinks">
+                <button class="clink clink-on" type="button" onclick="chk('h')">
+                  all
+                </button>
+                <button
+                  class="clink clink-off"
+                  type="button"
+                  onclick="uchk('h')"
+                >
+                  none
+                </button>
+              </div>
+            </div>
+            <div
+              class="kgrid"
+              id="hg"
+              role="group"
+              aria-labelledby="hg-ttl"
+            ></div>
+          </div>
+
+          <div class="ksec">
+            <div class="sec-hd">
+              <span class="sec-ttl" id="hcg-ttl">Hiragana combos</span>
+              <div class="clinks">
+                <button
+                  class="clink clink-on"
+                  type="button"
+                  onclick="chk('hc')"
+                >
+                  all
+                </button>
+                <button
+                  class="clink clink-off"
+                  type="button"
+                  onclick="uchk('hc')"
+                >
+                  none
+                </button>
+              </div>
+            </div>
+            <div
+              class="kgrid"
+              id="hcg"
+              role="group"
+              aria-labelledby="hcg-ttl"
+            ></div>
+          </div>
+
+          <div class="ksec">
+            <div class="sec-hd">
+              <span class="sec-ttl" id="kg-ttl">Katakana</span>
+              <div class="clinks">
+                <button class="clink clink-on" type="button" onclick="chk('k')">
+                  all
+                </button>
+                <button
+                  class="clink clink-off"
+                  type="button"
+                  onclick="uchk('k')"
+                >
+                  none
+                </button>
+              </div>
+            </div>
+            <div
+              class="kgrid"
+              id="kg"
+              role="group"
+              aria-labelledby="kg-ttl"
+            ></div>
+          </div>
+
+          <div class="ksec">
+            <div class="sec-hd">
+              <span class="sec-ttl" id="kcg-ttl">Katakana combos</span>
+              <div class="clinks">
+                <button
+                  class="clink clink-on"
+                  type="button"
+                  onclick="chk('kc')"
+                >
+                  all
+                </button>
+                <button
+                  class="clink clink-off"
+                  type="button"
+                  onclick="uchk('kc')"
+                >
+                  none
+                </button>
+              </div>
+            </div>
+            <div
+              class="kgrid"
+              id="kcg"
+              role="group"
+              aria-labelledby="kcg-ttl"
+            ></div>
+          </div>
+
+          <div class="stats-actions">
+            <button
+              class="btn btn-reset"
+              id="rstbtn"
+              type="button"
+              onclick="resetStats()"
+            >
+              Reset stats
+            </button>
+            <p class="stats-hint">
+              Keeps best streak &amp; accuracy for this mode.
+            </p>
+          </div>
+
+          <div class="kbhelp">
+            <div class="kbr">
+              <kbd>Enter</kbd><kbd>Space</kbd> skip when wrong
+            </div>
+            <div class="kbr"><kbd>P</kbd> play sound</div>
+            <div class="kbr"><kbd>?</kbd> peek / reveal</div>
+            <div class="kbr"><kbd>Esc</kbd> skip when wrong</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
