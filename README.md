@@ -1,175 +1,47 @@
-# KanaFlow
+# Kanaflow
 
-KanaFlow is a minimalist, high-performance Japanese kana training tool designed to develop fluency through active recall and real-time feedback.
+A fast, offline-friendly Japanese typing quiz for **hiragana**, **katakana**, and **JLPT vocabulary** (N5–N1).
 
-> If you can type it instantly, you know it.
+## Features
 
----
+- **Letters mode** — type romaji for single kana and combo (yōon) characters
+- **Words mode** — type the full reading of a JLPT word (level filter: all / N5–N1)
+- 22 color themes, 5 kana display fonts
+- Live per-character feedback, streaks, accuracy
+- Session stats + best streak / accuracy **persisted per mode**
+- Optional browser TTS for pronunciation
+- No build step, no backend — static HTML/CSS/JS
 
-## Overview
+## Run locally
 
-KanaFlow focuses on one objective: converting recognition into automatic recall. Instead of relying on passive flashcards, it requires direct input, forcing the learner to produce the correct reading under minimal latency.
-
-The system is intentionally lightweight, running entirely in the browser without dependencies, while maintaining a high degree of responsiveness and configurability.
-
----
-
-## Core Features
-
-### Input-Driven Learning
-
-* Type romaji for each kana
-* Immediate validation with real-time feedback
-* Eliminates guess-based recognition
-
-### Adaptive Reinforcement
-
-* Incorrect answers are reintroduced into the queue
-* Reinforces weak points without explicit scheduling systems
-
-### Audio Integration
-
-* Native browser text-to-speech (Japanese)
-* Supports phonetic association alongside visual recall
-
-### Configurable Training Scope
-
-* Hiragana
-* Katakana
-* Combination forms (e.g., きゃ, しゃ)
-* Fine-grained enable/disable controls
-
-### Theming System
-
-* Multiple built-in themes (e.g., Night, Gruvbox, Nord, Tokyo Night)
-* Designed for long-duration use with minimal visual fatigue
-
-### Typography Control
-
-* Multiple Japanese fonts to simulate real-world variation
-* Helps prevent overfitting to a single character style
-
-### Performance-Oriented Design
-
-* Single-file architecture (HTML + CSS + JS)
-* No frameworks or external dependencies
-* Near-zero latency interaction
-
----
-
-## Learning Model
-
-KanaFlow is grounded in established principles of skill acquisition:
-
-| Principle           | Implementation                        |
-| ------------------- | ------------------------------------- |
-| Active Recall       | Direct input instead of recognition   |
-| Immediate Feedback  | Live validation and correction        |
-| Reinforcement       | Incorrect items reappear in queue     |
-| Flow State          | Minimal UI, uninterrupted interaction |
-| Multimodal Encoding | Visual + auditory input               |
-
-The system prioritizes fluency over familiarity. Recognition is not considered sufficient; response speed and accuracy are the targets.
-
----
-
-## Controls
-
-| Key   | Action                        |
-| ----- | ----------------------------- |
-| Enter | Submit / Continue             |
-| Space | Skip (after incorrect answer) |
-| P     | Play audio                    |
-| ?     | Reveal reading                |
-| Esc   | Skip when incorrect           |
-
----
-
-## Installation
-
-### Local Use
-
-Open the HTML file directly in a browser:
+Open `index.html` in a browser, or serve the folder:
 
 ```bash
-open index.html
+npx serve .
+# or
+python -m http.server 8080
 ```
 
-### Deployment
+## Shortcuts
 
-* Upload to a repository
-* Enable GitHub Pages
-* No build process required
+| Key | Action |
+|-----|--------|
+| Enter / Space | Submit or continue after a miss |
+| P | Play sound |
+| ? | Peek / reveal reading |
+| Esc | Skip when wrong |
 
----
+## Project layout
 
-## Architecture
+| File | Role |
+|------|------|
+| `index.html` | Markup |
+| `style.css` | Layout + 22 themes |
+| `script.js` | Quiz logic, settings, stats |
+| `words.js` | JLPT word bank (7,012 entries) |
+| `favicon.svg` | Icon |
 
-KanaFlow is intentionally simple and self-contained.
+## Data & licenses
 
-### Components
-
-* `KD`: Kana dataset (hiragana, katakana, combinations)
-* `pool`: Active training set
-* `queue`: Reinforcement mechanism for incorrect answers
-* Input engine: Real-time validation and feedback
-* Theme engine: CSS variable-based theming
-
-### Technologies
-
-* Vanilla JavaScript
-* CSS variables for theming
-* `localStorage` for persistence
-* Web Speech API for audio
-
----
-
-## Limitations
-
-* Text-to-speech depends on browser voice availability
-* Reinforcement is heuristic, not a formal spaced repetition algorithm
-* Progress tracking is limited to localStorage
-* Romaji variations are partially supported
-
----
-
-## Future Work
-
-* Implementation of a formal spaced repetition system (e.g., SM-2)
-* Persistent user profiles and synchronization
-* Expansion into kanji training
-* Improved mobile experience
-* Detailed performance analytics
-
----
-
-## Contributing
-
-Contributions are encouraged, particularly in the following areas:
-
-* Input normalization and romaji handling
-* Reinforcement algorithm improvements
-* Interface and usability enhancements
-* Accessibility
-
----
-
-## License
-
-This project is licensed under the [MIT License](https://github.com/NajmosSalahin/KanaFlow/blob/main/LICENSE).
-
----
-
-## Practice Guidance
-
-* Begin with Hiragana only
-* Avoid using reveal once basic familiarity is established
-* Aim for sustained high accuracy (≥90%)
-* Introduce Katakana after stabilization
-* Add combination forms last
-
----
-
-KanaFlow is designed around a single standard: fluency through recall under constraint.
-
-If you can type it instantly, you know it.
+- **Code:** MIT (see `LICENSE`)
+- **Word bank:** [OpenJLPT](https://github.com/evanclan/OpenJLPT) — **CC BY-SA 4.0** — plus original Kanaflow curated entries (see `words.js` header)
