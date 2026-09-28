@@ -156,6 +156,7 @@ function setFont(el) {
     c.classList.toggle("active", on);
     c.setAttribute("aria-pressed", on ? "true" : "false");
   });
+  fitKana();
 }
 
 /* === TOOLTIP === */
@@ -506,6 +507,7 @@ function next() {
   if (!pool.length) {
     document.getElementById("kc").textContent = "—";
     document.getElementById("kc").className = "kana-char in";
+    document.getElementById("kc").style.fontSize = "";
     document.getElementById("tl").textContent =
       mode === "words" ? "no words available" : "hiragana";
     document.getElementById("wm").style.display = "none";
@@ -537,6 +539,41 @@ function next() {
   curAlt = it.alt;
   curLvl = it.lvl || null;
   render();
+}
+
+function fitKana() {
+  const el = document.getElementById("kc");
+  el.style.fontSize = "";
+  if (!curCh) return;
+  const avail = el.parentElement ? el.parentElement.clientWidth : 0;
+  if (!avail) return;
+  const cs = getComputedStyle(el);
+  const m = document.createElement("span");
+  m.textContent = el.textContent;
+  m.style.cssText =
+    "position:absolute;visibility:hidden;white-space:nowrap;line-height:1;" +
+    "font-family:" +
+    cs.fontFamily +
+    ";font-size:" +
+    cs.fontSize +
+    ";font-weight:" +
+    cs.fontWeight +
+    ";letter-spacing:" +
+    cs.letterSpacing +
+    ";";
+  document.body.appendChild(m);
+  const w = m.offsetWidth;
+  m.remove();
+  if (w > avail) {
+    const base = parseFloat(cs.fontSize);
+    el.style.fontSize =
+      Math.max(20, Math.floor(base * ((avail * 0.96) / w))) + "px";
+  }
+}
+let fitRaf = 0;
+function scheduleFit() {
+  cancelAnimationFrame(fitRaf);
+  fitRaf = requestAnimationFrame(fitKana);
 }
 
 function render() {
@@ -584,6 +621,7 @@ function render() {
   document.getElementById("skbtn").style.display = "none";
   document.getElementById("rbtn").style.display = "";
   updateStats();
+  fitKana();
 }
 
 /* === REVEAL === */
@@ -818,22 +856,48 @@ function toggleOpt() {
   btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
-/* === MOBILE KEYBOARD VIEWPORT === */
+/* === MOBILE KEYBOARD VIEWPORT ===
+   Since Chrome 108 (and always on iOS) the on-screen keyboard only
+   shrinks the *visual* viewport — layout viewport, 100dvh and height
+   media queries stay unchanged. We size the app via --app-h and flip
+   body.kb-open so the layout compacts to the visible area above the
+   keyboard (~2/3 of the screen). */
 function setupViewport() {
   const vv = window.visualViewport;
   if (!vv) return;
+  const inp = document.getElementById("inp");
+  let kbOpen = false;
+  let kbTimer = null;
   const apply = () => {
     const h = Math.round(vv.height);
     document.documentElement.style.setProperty("--app-h", h + "px");
-    const ae = document.activeElement;
-    if (ae && ae.id === "inp") {
+    const focused = document.activeElement === inp;
+    const occluded = window.innerHeight - vv.height;
+    // >140px gap rules out the iOS toolbar (~84px); a real keyboard
+    // takes 250-350px. Hysteresis (140 open / 100 close) avoids flicker.
+    const shouldOpen = focused && (kbOpen ? occluded > 100 : occluded > 140);
+    if (shouldOpen !== kbOpen) {
+      kbOpen = shouldOpen;
+      document.body.classList.toggle("kb-open", kbOpen);
+    }
+    scheduleFit();
+    if (focused) {
       requestAnimationFrame(() => {
-        ae.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        if (document.activeElement === inp)
+          inp.scrollIntoView({ block: "nearest", behavior: "smooth" });
       });
     }
   };
+  const delayed = () => {
+    // iOS only updates visualViewport after the keyboard animation
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(apply, 350);
+  };
   vv.addEventListener("resize", apply);
   vv.addEventListener("scroll", apply);
+  window.addEventListener("resize", apply);
+  inp.addEventListener("focusin", delayed);
+  inp.addEventListener("focusout", delayed);
   apply();
 }
 
@@ -841,6 +905,8 @@ load();
 loadStats();
 buildPool();
 setupViewport();
+if (document.fonts && document.fonts.ready)
+  document.fonts.ready.then(() => scheduleFit());
 if (mode === "words") {
   ensureWords(() => {
     rebuildPool();

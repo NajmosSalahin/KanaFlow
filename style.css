@@ -421,8 +421,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(1.6rem + env(safe-area-inset-top, 0px)) 1.375rem
-    calc(1.8rem + env(safe-area-inset-bottom, 0px));
+  padding: calc(1.6rem + env(safe-area-inset-top, 0px))
+    calc(1.375rem + env(safe-area-inset-right, 0px))
+    calc(1.8rem + env(safe-area-inset-bottom, 0px))
+    calc(1.375rem + env(safe-area-inset-left, 0px));
   font-size: 110%;
 }
 .site-title {
@@ -463,6 +465,7 @@ body {
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   scrollbar-width: thin;
@@ -543,6 +546,7 @@ body {
 }
 .acc-wrap {
   flex: 1;
+  min-width: 0;
   height: 3px;
   background: var(--bg4);
   border-radius: 2px;
@@ -610,8 +614,12 @@ body {
   color: var(--t2);
   margin-bottom: 1.1rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  row-gap: 6px;
   gap: 8px;
+  text-align: center;
 }
 .word-mean {
   font-family: "Figtree", sans-serif;
@@ -957,6 +965,7 @@ kbd {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--b2) transparent;
 }
@@ -1300,10 +1309,101 @@ kbd {
   align-self: center;
 }
 
-@media (max-width: 680px) {
+/* ===== KEYBOARD-OPEN COMPACT (mobile on-screen keyboard) =====
+   Toggled by JS when #inp is focused and the visual viewport has
+   shrunk by >140px (keyboard covers ~1/3 of the screen). --app-h is
+   the real visible height in px; vh units do NOT respond to the
+   keyboard on iOS/Android, so kana sizing goes through --app-h. */
+body.kb-open {
+  padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+}
+body.kb-open .site-title,
+body.kb-open .opt-panel {
+  display: none;
+}
+body.kb-open .quiz-card {
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+body.kb-open .mode-row {
+  margin-bottom: 0.45rem;
+}
+body.kb-open .stats-row {
+  margin-bottom: 0.55rem;
+}
+body.kb-open .kana-area {
+  padding: 0.35rem 0 0.25rem;
+}
+body.kb-open .type-label {
+  margin-bottom: 0.5rem;
+}
+body.kb-open .reveal {
+  margin-top: 0.35rem;
+}
+body.kb-open .kana-btns {
+  margin-top: 0.4rem;
+}
+body.kb-open .input-area {
+  margin-top: 0.5rem;
+}
+body.kb-open .msg {
+  margin-top: 0.35rem;
+}
+body.kb-open .act-row {
+  margin-top: 0.5rem;
+}
+body.kb-open .kana-char {
+  font-size: min(6.5rem, var(--app-h, 100dvh) * 0.17);
+}
+body.kb-open .kana-char.word-len {
+  font-size: min(4.2rem, var(--app-h, 100dvh) * 0.13);
+}
+body.kb-open .kana-char.word-len-lg {
+  font-size: min(3.3rem, var(--app-h, 100dvh) * 0.105);
+}
+
+/* ===== LARGE SCREENS ===== */
+@media (min-width: 1200px) {
+  .main-layout {
+    max-width: 1040px;
+  }
+  .opt-panel {
+    width: 310px;
+  }
+}
+@media (min-width: 1440px) {
   body {
-    padding: calc(1.2rem + env(safe-area-inset-top, 0px)) 1rem
-      calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    font-size: 115%;
+  }
+  .main-layout {
+    max-width: 1140px;
+    gap: 1.5rem;
+  }
+  .quiz-card {
+    padding: 1.75rem;
+  }
+  .opt-panel {
+    width: 320px;
+  }
+  .kana-char {
+    font-size: clamp(5rem, 13vw, 7.5rem);
+  }
+  .kana-char.word-len {
+    font-size: clamp(3rem, 9vw, 5rem);
+  }
+  .kana-char.word-len-lg {
+    font-size: clamp(2.4rem, 7vw, 4rem);
+  }
+}
+
+/* ===== STACKED (tablet portrait / narrow windows) ===== */
+@media (max-width: 860px) and (min-height: 501px) {
+  body {
+    padding: calc(1.2rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1.2rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
   }
   .main-layout {
     flex-direction: column;
@@ -1333,5 +1433,181 @@ kbd {
   }
   .acc-wrap {
     min-width: 40px;
+  }
+}
+
+/* ===== VERY NARROW PHONES ===== */
+@media (max-width: 400px) {
+  body {
+    padding-left: calc(0.75rem + env(safe-area-inset-left, 0px));
+    padding-right: calc(0.75rem + env(safe-area-inset-right, 0px));
+  }
+  .quiz-card {
+    padding: 1rem;
+  }
+  .stats-row {
+    gap: 0.4rem;
+  }
+  .stat-chip,
+  .streak {
+    font-size: 11px;
+    padding: 3px 7px;
+  }
+  .best-chip {
+    font-size: 10px;
+  }
+  .type-label {
+    font-size: 10px;
+  }
+  .kana-char {
+    font-size: clamp(3.75rem, 15vw, 6.5rem);
+  }
+  .kana-char.word-len {
+    font-size: clamp(2rem, 10vw, 4.2rem);
+  }
+  .kana-char.word-len-lg {
+    font-size: clamp(1.6rem, 8vw, 3.3rem);
+  }
+}
+
+/* ===== SHORT VIEWPORTS (landscape laptops, small windows) ===== */
+@media (max-height: 600px) {
+  body {
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+  .site-title {
+    margin-bottom: 0.5rem;
+  }
+  .quiz-card {
+    padding: 1rem;
+  }
+  .mode-row {
+    margin-bottom: 0.5rem;
+  }
+  .stats-row {
+    margin-bottom: 0.6rem;
+  }
+  .kana-area {
+    padding: 0.4rem 0 0.3rem;
+  }
+  .type-label {
+    margin-bottom: 0.5rem;
+  }
+  .reveal {
+    margin-top: 0.4rem;
+  }
+  .kana-btns {
+    margin-top: 0.4rem;
+  }
+  .input-area {
+    margin-top: 0.5rem;
+  }
+  .msg {
+    margin-top: 0.35rem;
+  }
+  .act-row {
+    margin-top: 0.5rem;
+  }
+  .kana-char {
+    font-size: clamp(3.25rem, min(12vw, 20vh), 6.5rem);
+  }
+  .kana-char.word-len {
+    font-size: clamp(2.2rem, min(9vw, 15vh), 4.2rem);
+  }
+  .kana-char.word-len-lg {
+    font-size: clamp(1.75rem, min(7vw, 12vh), 3.3rem);
+  }
+}
+
+/* ===== LANDSCAPE PHONES (short + stays side-by-side) =====
+   The stack query above requires min-height: 501px, so phones in
+   landscape keep the row layout and get extra compaction here. */
+@media (max-height: 500px) {
+  body {
+    padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  }
+  .site-title {
+    display: none;
+  }
+  .main-layout {
+    gap: 0.75rem;
+  }
+  .quiz-card {
+    padding: 0.85rem;
+  }
+  .mode-row {
+    margin-bottom: 0.4rem;
+  }
+  .stats-row {
+    margin-bottom: 0.5rem;
+  }
+  .kana-area {
+    padding: 0.3rem 0 0.2rem;
+  }
+  .type-label {
+    margin-bottom: 0.4rem;
+  }
+  .reveal {
+    margin-top: 0.3rem;
+  }
+  .kana-btns {
+    margin-top: 0.35rem;
+  }
+  .input-area {
+    margin-top: 0.4rem;
+  }
+  .msg {
+    margin-top: 0.3rem;
+  }
+  .act-row {
+    margin-top: 0.4rem;
+  }
+  .kana-char {
+    font-size: clamp(2.75rem, min(11vw, 24vh), 5rem);
+  }
+  .kana-char.word-len {
+    font-size: clamp(2rem, min(8vw, 18vh), 3.6rem);
+  }
+  .kana-char.word-len-lg {
+    font-size: clamp(1.6rem, min(6.5vw, 14vh), 3rem);
+  }
+  .opt-panel {
+    width: clamp(200px, 30vw, 240px);
+  }
+}
+
+/* ===== TOUCH DEVICES (coarse pointer) ===== */
+@media (pointer: coarse) {
+  .tchip,
+  .fchip,
+  .wlchip,
+  .clink,
+  .mbtn,
+  .kbtn,
+  .btn,
+  .opt-toggle {
+    min-height: 44px;
+  }
+  .mbtn {
+    padding: 10px 16px;
+  }
+  .tchip,
+  .fchip,
+  .wlchip {
+    padding: 10px 12px;
+  }
+  .btn {
+    padding: 10px 16px;
+  }
+  .klbl {
+    min-height: 52px;
+  }
+  .kgrid {
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  }
+  .ent-hint {
+    display: none;
   }
 }
