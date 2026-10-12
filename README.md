@@ -29,7 +29,7 @@ python -m http.server 8080
 | Enter | Submit or continue after a miss |
 | . | Play sound |
 | / | Peek / reveal reading |
-| , | Glow the English meaning (words mode — hold to keep it glowing) |
+| , | Glow the English meaning (words mode — hold to keep it lit, quick tap to peek) |
 | Esc | Skip when wrong |
 
 ## Project layout

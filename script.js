@@ -314,7 +314,10 @@ function setMode(m, skipSave) {
     .getElementById("jlptSection")
     .classList.toggle("hidden", m !== "words");
   if (!skipSave) localStorage.setItem("ks_mode", m);
-  if (prev !== m) loadStats();
+  if (prev !== m) {
+    loadStats();
+    clearGlow();
+  }
   if (m === "words") {
     ensureWords(() => {
       rebuildPool();
@@ -510,9 +513,9 @@ function next() {
     document.getElementById("kc").style.fontSize = "";
     document.getElementById("tl").textContent =
       mode === "words" ? "no words available" : "hiragana";
-    document.getElementById("wm").classList.remove("wm-glow");
     document.getElementById("wm").style.display = "none";
     document.getElementById("wlv").style.display = "none";
+    clearGlow();
     hideRv();
     emptyNote.style.display = "block";
     emptyNote.innerHTML =
@@ -595,13 +598,16 @@ function render() {
       : GL[curGrp] || "";
   const wm = document.getElementById("wm");
   const wlv = document.getElementById("wlv");
-  wm.classList.remove("wm-glow");
   if (mode === "words" && curEn) {
     wm.textContent = curEn;
     wm.style.display = "";
   } else {
     wm.style.display = "none";
   }
+  // Re-evaluate glow state instead of stripping it: a glow held across
+  // an auto-advance (glowHeld) or set by the button (glowSticky) carries
+  // into the new word instead of dropping out from under the user.
+  syncGlow();
   if (mode === "words" && curLvl) {
     wlv.textContent = curLvl;
     wlv.style.display = "";
@@ -715,14 +721,61 @@ function isTypingTarget(el) {
   return false;
 }
 
-function glowMeaning(on) {
+/* === MEANING GLOW (words mode) ===
+   Hold , to light the English meaning: it comes up in one 0.28s bloom and
+   stays steadily lit while the key is down — including across word
+   changes, since render() re-evaluates instead of stripping the class.
+   A tap shorter than GLOW_MIN is held open for the remainder, so a quick
+   press still reads as a visible peek flash instead of a flicker.
+   The ✦ meaning button mirrors this on touch: tap to toggle sticky glow. */
+const GLOW_MIN = 300; // minimum visible ms for a quick tap
+let glowHeld = false, // physical , key is currently down
+  glowSticky = false, // meaning button toggled it on
+  glowOnAt = 0, // when the current glow lit up
+  glowTimer = 0; // pending shutdown for short taps
+
+function paintGlow(on) {
+  document.getElementById("wm").classList.toggle("wm-glow", on);
+  const b = document.getElementById("glowbtn");
+  b.classList.toggle("on", on);
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+}
+function syncGlow() {
   const wm = document.getElementById("wm");
-  if (!on) {
-    wm.classList.remove("wm-glow");
+  const ok = mode === "words" && !!curEn && wm.style.display !== "none";
+  paintGlow(ok && (glowHeld || glowSticky));
+  document.getElementById("glowbtn").style.display = ok ? "" : "none";
+}
+function glowMeaning(on) {
+  clearTimeout(glowTimer);
+  if (on) {
+    // auto-repeat fires while held — only stamp time on the initial press
+    // so a long hold releases immediately instead of serving the full
+    // minimum-visibility window after keyup.
+    if (!glowHeld) glowOnAt = Date.now();
+    glowHeld = true;
+    syncGlow();
     return;
   }
-  if (mode !== "words" || !curEn || wm.style.display === "none") return;
-  wm.classList.add("wm-glow");
+  glowHeld = false;
+  if (glowSticky) {
+    syncGlow();
+    return;
+  }
+  const left = GLOW_MIN - (Date.now() - glowOnAt);
+  glowTimer = setTimeout(syncGlow, Math.max(0, left));
+}
+function toggleMeaningGlow() {
+  glowSticky = !glowHeld && !glowSticky;
+  glowHeld = false;
+  clearTimeout(glowTimer);
+  syncGlow();
+}
+function clearGlow() {
+  glowHeld = false;
+  glowSticky = false;
+  clearTimeout(glowTimer);
+  syncGlow();
 }
 
 document.addEventListener("keydown", function (e) {
@@ -773,7 +826,7 @@ document.addEventListener("keyup", function (e) {
   if (e.key === ",") glowMeaning(false);
 });
 function releaseGlow() {
-  glowMeaning(false);
+  clearGlow();
 }
 window.addEventListener("blur", releaseGlow);
 document.addEventListener("visibilitychange", releaseGlow);
