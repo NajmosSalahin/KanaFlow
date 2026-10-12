@@ -26,9 +26,10 @@ python -m http.server 8080
 
 | Key | Action |
 |-----|--------|
-| Enter / Space | Submit or continue after a miss |
-| P | Play sound |
-| ? | Peek / reveal reading |
+| Enter | Submit or continue after a miss |
+| . | Play sound |
+| / | Peek / reveal reading |
+| , | Glow the English meaning (words mode — hold to keep it glowing) |
 | Esc | Skip when wrong |
 
 ## Project layout

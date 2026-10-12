@@ -510,6 +510,7 @@ function next() {
     document.getElementById("kc").style.fontSize = "";
     document.getElementById("tl").textContent =
       mode === "words" ? "no words available" : "hiragana";
+    document.getElementById("wm").classList.remove("wm-glow");
     document.getElementById("wm").style.display = "none";
     document.getElementById("wlv").style.display = "none";
     hideRv();
@@ -594,6 +595,7 @@ function render() {
       : GL[curGrp] || "";
   const wm = document.getElementById("wm");
   const wlv = document.getElementById("wlv");
+  wm.classList.remove("wm-glow");
   if (mode === "words" && curEn) {
     wm.textContent = curEn;
     wm.style.display = "";
@@ -616,7 +618,7 @@ function render() {
   inp.focus();
   document.getElementById("cfr").innerHTML = "";
   document.getElementById("msg").textContent =
-    "Peek the reading — hover, tap, or press ?";
+    "Peek the reading — hover, tap, or press /";
   document.getElementById("msg").className = "msg";
   document.getElementById("skbtn").style.display = "none";
   document.getElementById("rbtn").style.display = "";
@@ -687,18 +689,14 @@ document.getElementById("inp").addEventListener("input", function () {
   checkLive(this.value.toLowerCase());
 });
 document.getElementById("inp").addEventListener("keydown", function (e) {
+  if (e.key === " ") {
+    e.preventDefault();
+    return;
+  }
   if (!curCh) return;
-  if (e.key === "Enter" || (e.key === " " && !this.value)) {
+  if (e.key === "Enter") {
     e.preventDefault();
     isWrong ? skip() : submit(this.value.toLowerCase());
-  }
-  if (e.key === "?") {
-    e.preventDefault();
-    toggleReveal();
-  }
-  if (e.key.toLowerCase() === "p" && !this.value) {
-    e.preventDefault();
-    playAudio();
   }
 });
 
@@ -717,6 +715,16 @@ function isTypingTarget(el) {
   return false;
 }
 
+function glowMeaning(on) {
+  const wm = document.getElementById("wm");
+  if (!on) {
+    wm.classList.remove("wm-glow");
+    return;
+  }
+  if (mode !== "words" || !curEn || wm.style.display === "none") return;
+  wm.classList.add("wm-glow");
+}
+
 document.addEventListener("keydown", function (e) {
   const inp = document.getElementById("inp");
   if (e.key === "Escape") {
@@ -725,17 +733,31 @@ document.addEventListener("keydown", function (e) {
     return;
   }
   if (
-    e.key === "?" &&
-    document.activeElement !== inp &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
     !isTypingTarget(document.activeElement)
   ) {
-    e.preventDefault();
-    toggleReveal();
-    return;
+    if (e.key === "/") {
+      e.preventDefault();
+      toggleReveal();
+      return;
+    }
+    if (e.key === ".") {
+      e.preventDefault();
+      playAudio();
+      return;
+    }
+    if (e.key === ",") {
+      e.preventDefault();
+      glowMeaning(true);
+      return;
+    }
   }
   if (
     document.activeElement !== inp &&
     e.key.length === 1 &&
+    e.key !== " " &&
     !e.ctrlKey &&
     !e.metaKey &&
     !e.altKey &&
@@ -746,6 +768,15 @@ document.addEventListener("keydown", function (e) {
     inp.focus();
   }
 });
+
+document.addEventListener("keyup", function (e) {
+  if (e.key === ",") glowMeaning(false);
+});
+function releaseGlow() {
+  glowMeaning(false);
+}
+window.addEventListener("blur", releaseGlow);
+document.addEventListener("visibilitychange", releaseGlow);
 
 function checkLive(typed) {
   const poss = getPoss(curRd),
